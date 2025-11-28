@@ -1,153 +1,92 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Dashboard Avícola - Profesional</title>
-
-<link rel="stylesheet" href="style.css">
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Panel de Control - Galpones</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div id="app">
-    <!-- SIDEBAR -->
+
     <aside class="sidebar">
-      <div class="brand">🐔 Avícola Pro</div>
-
-      <div class="user-block">
-        <div class="user-name">Usuario: <b>admin</b></div>
-        <button id="btn-logout" class="btn small">Cerrar sesión</button>
-      </div>
-
-      <hr>
-
-      <div class="menu">
-        <label for="galponSelect">Seleccionar galpón</label>
-        <select id="galponSelect"></select>
-
-        <button id="btn-nuevo" class="btn">Nuevo registro</button>
-        <button id="btn-historial" class="btn">Ver historial</button>
-
-        <hr>
-        <div class="legend">
-          <div><span class="dot green"></span>OK</div>
-          <div><span class="dot yellow"></span>Atención</div>
-          <div><span class="dot red"></span>Crítico</div>
-        </div>
-      </div>
+        <h2>🐔 Galpones</h2>
+        <nav>
+            <a href="#" class="active">Panel General</a>
+            <a href="#">Producción</a>
+            <a href="#">Alimentación</a>
+            <a href="#">Ambiente</a>
+            <a href="#">Mortalidad</a>
+            <a href="#">Proyección</a>
+        </nav>
     </aside>
 
-    <!-- MAIN -->
-    <main class="main">
-      <!-- TOP -->
-      <header class="top">
-        <h1>Dashboard Avícola — Galpones</h1>
-        <div class="top-right">
-          <div id="last-sync">Datos guardados localmente</div>
-        </div>
-      </header>
+    <main class="content">
+        <header>
+            <h1>Panel de Control</h1>
 
-      <!-- CARDS -->
-      <section class="cards" id="cards-area">
-        <!-- cards dinámicos -->
-      </section>
+            <select id="selector-galpon">
+                <option value="1">Galpón 1</option>
+                <option value="2">Galpón 2</option>
+                <option value="3">Galpón 3</option>
+                <option value="4">Galpón 4</option>
+            </select>
+        </header>
 
-      <!-- GRÁFICOS -->
-      <section class="graphs">
-        <div class="graph big">
-          <h3>Producción (últimos 7 registros)</h3>
-          <canvas id="chartProduccion"></canvas>
-        </div>
+        <section class="dashboard">
 
-        <div class="graph">
-          <h3>Temperatura (°C)</h3>
-          <canvas id="chartTemp"></canvas>
-        </div>
-
-        <div class="graph">
-          <h3>Humedad (%)</h3>
-          <canvas id="chartHum"></canvas>
-        </div>
-
-        <div class="graph">
-          <h3>Consumo de alimento (kg) vs Huevos</h3>
-          <canvas id="chartConv"></canvas>
-        </div>
-
-        <div class="graph small">
-          <h3>Distribución: Mortandad / Vivas</h3>
-          <canvas id="chartDonut"></canvas>
-        </div>
-
-        <div class="graph small">
-          <h3>Comparativo: Producción por Galpón</h3>
-          <canvas id="chartComp"></canvas>
-        </div>
-      </section>
-
-      <!-- MODALES / FORMULARIOS -->
-      <div id="modal" class="modal hidden">
-        <div class="modal-body">
-          <h2 id="modal-title">Nuevo registro</h2>
-          <form id="form-reg">
-            <div class="row">
-              <label>Fecha</label>
-              <input type="date" id="f-fecha" required>
+            <!-- PRODUCCIÓN DIARIA -->
+            <div class="card large">
+                <h3>Producción diaria</h3>
+                <canvas id="produccionDiaria"></canvas>
             </div>
 
-            <div class="row">
-              <label>Hora</label>
-              <input type="time" id="f-hora" required>
+            <!-- POSTURA -->
+            <div class="card medium">
+                <h3>% de postura</h3>
+                <p class="numero" id="posturaNumero">--%</p>
+                <canvas id="graficoPostura"></canvas>
             </div>
 
-            <div class="row triple">
-              <div><label>Temperatura (°C)</label><input id="f-temp" type="number" step="0.1"></div>
-              <div><label>Humedad (%)</label><input id="f-hum" type="number" step="0.1"></div>
-              <div><label>Amoníaco (ppm)</label><input id="f-nh3" type="number" step="0.1"></div>
+            <!-- RECOMENDACIONES -->
+            <div class="card medium">
+                <h3>Recomendaciones</h3>
+                <ul id="listaRecomendaciones"></ul>
             </div>
 
-            <div class="row triple">
-              <div><label>Alimento (kg)</label><input id="f-alim" type="number" step="0.01"></div>
-              <div><label>Agua (L)</label><input id="f-agua" type="number" step="0.1"></div>
-              <div><label>Energía (kWh)</label><input id="f-kwh" type="number" step="0.01"></div>
+            <!-- PRODUCCIÓN PROYECTADA -->
+            <div class="card large">
+                <h3>Producción proyectada</h3>
+                <canvas id="proyeccion"></canvas>
             </div>
 
-            <div class="row triple">
-              <div><label>Peso prom. (g)</label><input id="f-peso" type="number" step="0.1"></div>
-              <div><label>Huevos (unidades)</label><input id="f-huevos" type="number"></div>
-              <div><label>Gallinas vivas</label><input id="f-gallinas" type="number"></div>
+            <!-- TEMPERATURA -->
+            <div class="card medium">
+                <h3>Temperatura</h3>
+                <canvas id="temperaturaGrafico"></canvas>
             </div>
 
-            <div class="row">
-              <label>Mortandad (aves)</label>
-              <input id="f-mort" type="number">
+            <!-- HUMEDAD -->
+            <div class="card medium">
+                <h3>Humedad</h3>
+                <canvas id="humedadGrafico"></canvas>
             </div>
 
-            <div class="row actions">
-              <button type="submit" class="btn">Guardar</button>
-              <button type="button" id="btn-cancel" class="btn ghost">Cancelar</button>
+            <!-- MORTALIDAD -->
+            <div class="card medium">
+                <h3>Mortalidad diaria</h3>
+                <canvas id="mortalidadGrafico"></canvas>
             </div>
-          </form>
-        </div>
-      </div>
 
-      <!-- HISTORIAL -->
-      <div id="hist" class="hidden history">
-        <h3>Historial - Galpón <span id="hist-galpon"></span></h3>
-        <table id="hist-table">
-          <thead><tr>
-            <th>Fecha</th><th>Hora</th><th>Temp</th><th>Hum</th><th>NH3</th><th>Huevos</th><th>Gallinas</th><th>Mort</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-        <button id="btn-close-hist" class="btn">Cerrar</button>
-      </div>
+            <!-- COMEDERO -->
+            <div class="card medium">
+                <h3>Consumo de alimento (kg)</h3>
+                <canvas id="alimentoGrafico"></canvas>
+            </div>
 
+        </section>
     </main>
-  </div>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
