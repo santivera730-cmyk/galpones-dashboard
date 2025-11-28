@@ -2,91 +2,105 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width">
-    <title>Panel de Control - Galpones</title>
+    <title>Dashboard de Galpones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css">
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
+    <!-- SIDEBAR -->
     <aside class="sidebar">
-        <h2>🐔 Galpones</h2>
-        <nav>
-            <a href="#" class="active">Panel General</a>
-            <a href="#">Producción</a>
-            <a href="#">Alimentación</a>
-            <a href="#">Ambiente</a>
-            <a href="#">Mortalidad</a>
-            <a href="#">Proyección</a>
-        </nav>
+        <h2>GALPONES</h2>
+
+        <label>Seleccionar galpón:</label>
+        <select id="selector-galpon">
+            <option value="1">Galpón 1</option>
+            <option value="2">Galpón 2</option>
+            <option value="3">Galpón 3</option>
+            <option value="4">Galpón 4</option>
+        </select>
+
+        <h3>Paneles</h3>
+        <button data-section="inicio">📊 Resumen general</button>
+        <button data-section="produccion">🥚 Producción</button>
+        <button data-section="ambiente">🌡️ Temperatura / Humedad</button>
+        <button data-section="sanidad">💀 Mortalidad</button>
+        <button data-section="alimento">🍽️ Consumo alimento</button>
+        <button data-section="recomendaciones">⚠ Recomendaciones</button>
     </aside>
 
-    <main class="content">
-        <header>
-            <h1>Panel de Control</h1>
+    <!-- CONTENIDO -->
+    <main>
 
-            <select id="selector-galpon">
-                <option value="1">Galpón 1</option>
-                <option value="2">Galpón 2</option>
-                <option value="3">Galpón 3</option>
-                <option value="4">Galpón 4</option>
-            </select>
-        </header>
+        <!-- SECCIÓN RESUMEN -->
+        <section id="inicio" class="section">
+            <h1>Resumen general</h1>
 
-        <section class="dashboard">
+            <div class="tarjetas">
+                <div class="card">
+                    <h2>Postura</h2>
+                    <p id="posturaNumero" class="numeroGrande">--%</p>
+                </div>
 
-            <!-- PRODUCCIÓN DIARIA -->
-            <div class="card large">
-                <h3>Producción diaria</h3>
-                <canvas id="produccionDiaria"></canvas>
+                <div class="card">
+                    <h2>Producción semanal</h2>
+                    <canvas id="produccionDiaria"></canvas>
+                </div>
+
+                <div class="card">
+                    <h2>Proyección</h2>
+                    <canvas id="proyeccion"></canvas>
+                </div>
             </div>
-
-            <!-- POSTURA -->
-            <div class="card medium">
-                <h3>% de postura</h3>
-                <p class="numero" id="posturaNumero">--%</p>
-                <canvas id="graficoPostura"></canvas>
-            </div>
-
-            <!-- RECOMENDACIONES -->
-            <div class="card medium">
-                <h3>Recomendaciones</h3>
-                <ul id="listaRecomendaciones"></ul>
-            </div>
-
-            <!-- PRODUCCIÓN PROYECTADA -->
-            <div class="card large">
-                <h3>Producción proyectada</h3>
-                <canvas id="proyeccion"></canvas>
-            </div>
-
-            <!-- TEMPERATURA -->
-            <div class="card medium">
-                <h3>Temperatura</h3>
-                <canvas id="temperaturaGrafico"></canvas>
-            </div>
-
-            <!-- HUMEDAD -->
-            <div class="card medium">
-                <h3>Humedad</h3>
-                <canvas id="humedadGrafico"></canvas>
-            </div>
-
-            <!-- MORTALIDAD -->
-            <div class="card medium">
-                <h3>Mortalidad diaria</h3>
-                <canvas id="mortalidadGrafico"></canvas>
-            </div>
-
-            <!-- COMEDERO -->
-            <div class="card medium">
-                <h3>Consumo de alimento (kg)</h3>
-                <canvas id="alimentoGrafico"></canvas>
-            </div>
-
         </section>
+
+        <!-- PRODUCCIÓN -->
+        <section id="produccion" class="section" style="display:none;">
+            <h1>Producción diaria</h1>
+            <canvas id="graficoPostura"></canvas>
+        </section>
+
+        <!-- AMBIENTE -->
+        <section id="ambiente" class="section" style="display:none;">
+            <h1>Temperatura y Humedad</h1>
+
+            <div class="tarjetas">
+                <div class="card">
+                    <h2>Temperatura</h2>
+                    <canvas id="temperaturaGrafico"></canvas>
+                </div>
+
+                <div class="card">
+                    <h2>Humedad</h2>
+                    <canvas id="humedadGrafico"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- SANIDAD -->
+        <section id="sanidad" class="section" style="display:none;">
+            <h1>Mortalidad</h1>
+            <canvas id="mortalidadGrafico"></canvas>
+        </section>
+
+        <!-- ALIMENTO -->
+        <section id="alimento" class="section" style="display:none;">
+            <h1>Consumo de alimento</h1>
+            <canvas id="alimentoGrafico"></canvas>
+        </section>
+
+        <!-- RECOMENDACIONES -->
+        <section id="recomendaciones" class="section" style="display:none;">
+            <h1>Recomendaciones</h1>
+            <ul id="listaRecomendaciones"></ul>
+        </section>
+
     </main>
 
     <script src="script.js"></script>
+
 </body>
 </html>
