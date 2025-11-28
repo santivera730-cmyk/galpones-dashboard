@@ -67,3 +67,156 @@
     <script src="script.js"></script>
 </body>
 </html>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dashboard Avícola - Profesional</title>
+
+<link rel="stylesheet" href="style.css">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">🐔 Avícola Pro</div>
+
+      <div class="user-block">
+        <div class="user-name">Usuario: <b>admin</b></div>
+        <button id="btn-logout" class="btn small">Cerrar sesión</button>
+      </div>
+
+      <hr>
+
+      <div class="menu">
+        <label for="galponSelect">Seleccionar galpón</label>
+        <select id="galponSelect"></select>
+
+        <button id="btn-nuevo" class="btn">Nuevo registro</button>
+        <button id="btn-historial" class="btn">Ver historial</button>
+
+        <hr>
+        <div class="legend">
+          <div><span class="dot green"></span>OK</div>
+          <div><span class="dot yellow"></span>Atención</div>
+          <div><span class="dot red"></span>Crítico</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <!-- TOP -->
+      <header class="top">
+        <h1>Dashboard Avícola — Galpones</h1>
+        <div class="top-right">
+          <div id="last-sync">Datos guardados localmente</div>
+        </div>
+      </header>
+
+      <!-- CARDS -->
+      <section class="cards" id="cards-area">
+        <!-- cards dinámicos -->
+      </section>
+
+      <!-- GRÁFICOS -->
+      <section class="graphs">
+        <div class="graph big">
+          <h3>Producción (últimos 7 registros)</h3>
+          <canvas id="chartProduccion"></canvas>
+        </div>
+
+        <div class="graph">
+          <h3>Temperatura (°C)</h3>
+          <canvas id="chartTemp"></canvas>
+        </div>
+
+        <div class="graph">
+          <h3>Humedad (%)</h3>
+          <canvas id="chartHum"></canvas>
+        </div>
+
+        <div class="graph">
+          <h3>Consumo de alimento (kg) vs Huevos</h3>
+          <canvas id="chartConv"></canvas>
+        </div>
+
+        <div class="graph small">
+          <h3>Distribución: Mortandad / Vivas</h3>
+          <canvas id="chartDonut"></canvas>
+        </div>
+
+        <div class="graph small">
+          <h3>Comparativo: Producción por Galpón</h3>
+          <canvas id="chartComp"></canvas>
+        </div>
+      </section>
+
+      <!-- MODALES / FORMULARIOS -->
+      <div id="modal" class="modal hidden">
+        <div class="modal-body">
+          <h2 id="modal-title">Nuevo registro</h2>
+          <form id="form-reg">
+            <div class="row">
+              <label>Fecha</label>
+              <input type="date" id="f-fecha" required>
+            </div>
+
+            <div class="row">
+              <label>Hora</label>
+              <input type="time" id="f-hora" required>
+            </div>
+
+            <div class="row triple">
+              <div><label>Temperatura (°C)</label><input id="f-temp" type="number" step="0.1"></div>
+              <div><label>Humedad (%)</label><input id="f-hum" type="number" step="0.1"></div>
+              <div><label>Amoníaco (ppm)</label><input id="f-nh3" type="number" step="0.1"></div>
+            </div>
+
+            <div class="row triple">
+              <div><label>Alimento (kg)</label><input id="f-alim" type="number" step="0.01"></div>
+              <div><label>Agua (L)</label><input id="f-agua" type="number" step="0.1"></div>
+              <div><label>Energía (kWh)</label><input id="f-kwh" type="number" step="0.01"></div>
+            </div>
+
+            <div class="row triple">
+              <div><label>Peso prom. (g)</label><input id="f-peso" type="number" step="0.1"></div>
+              <div><label>Huevos (unidades)</label><input id="f-huevos" type="number"></div>
+              <div><label>Gallinas vivas</label><input id="f-gallinas" type="number"></div>
+            </div>
+
+            <div class="row">
+              <label>Mortandad (aves)</label>
+              <input id="f-mort" type="number">
+            </div>
+
+            <div class="row actions">
+              <button type="submit" class="btn">Guardar</button>
+              <button type="button" id="btn-cancel" class="btn ghost">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- HISTORIAL -->
+      <div id="hist" class="hidden history">
+        <h3>Historial - Galpón <span id="hist-galpon"></span></h3>
+        <table id="hist-table">
+          <thead><tr>
+            <th>Fecha</th><th>Hora</th><th>Temp</th><th>Hum</th><th>NH3</th><th>Huevos</th><th>Gallinas</th><th>Mort</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+        <button id="btn-close-hist" class="btn">Cerrar</button>
+      </div>
+
+    </main>
+  </div>
+
+<script src="script.js"></script>
+</body>
+</html>
