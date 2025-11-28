@@ -1,82 +1,74 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
 body {
+    margin: 0;
     display: flex;
-    background: #f3f3f3;
+    font-family: Arial, sans-serif;
+    background: #f3f5f8;
 }
 
-/* SIDEBAR */
+/* ---------------- SIDEBAR ---------------- */
 .sidebar {
-    width: 260px;
-    background: #1e1e2e;
+    width: 200px;
+    background: #1e1f26;
     color: white;
-    height: 100vh;
     padding: 20px;
+    height: 100vh;
     position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 9999;
 }
 
 .sidebar h2 {
-    font-size: 22px;
-    margin-bottom: 20px;
+    margin-top: 0;
 }
 
-.sidebar button,
-.sidebar select {
+.btn-galpon {
     width: 100%;
     padding: 12px;
-    margin: 6px 0;
-    background: #2f2f44;
+    margin-bottom: 10px;
+    background: #4a8bff;
     border: none;
     color: white;
-    border-radius: 6px;
+    font-weight: bold;
     cursor: pointer;
+    border-radius: 6px;
 }
 
-.sidebar button:hover {
-    background: #4a4a6a;
+.btn-galpon:hover {
+    background: #2f6be0;
 }
 
-/* CONTENIDO */
+/* ---------------- CONTENIDO ---------------- */
 main {
-    margin-left: 260px;
-    padding: 25px;
-    width: calc(100% - 260px);
+    margin-left: 220px;
+    padding: 20px;
+    width: calc(100% - 220px);
 }
 
-h1 {
-    margin-bottom: 20px;
-}
-
-.tarjetas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 25px;
+.contenedor {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
 }
 
 .card {
     background: white;
-    padding: 20px;
+    padding: 15px;
     border-radius: 10px;
-    box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    flex: 1;
-    min-width: 300px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-.numeroGrande {
-    font-size: 48px;
-    font-weight: bold;
+.card.grande {
+    grid-column: span 2;
+}
+
+.card.mini {
+    grid-column: span 1;
     text-align: center;
 }
 
-canvas {
-    width: 100% !important;
-    height: 250px !important;
+.num-grande {
+    font-size: 45px;
+    font-weight: bold;
+}
+
+ul li {
+    margin-bottom: 8px;
 }
