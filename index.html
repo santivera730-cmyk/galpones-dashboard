@@ -1,222 +1,266 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard de Galpones</title>
-    <link rel="stylesheet" href="style.css" />
+/* Dashboard Avícola - Script
+   - Guarda datos en LocalStorage
+   - Maneja 4 galpones
+   - Genera múltiples gráficos con Chart.js
+   - Calcula indicadores y alertas
+*/
 
-    <!-- Importar gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+// --- CONFIG ---
+const GALPONES = [1,2,3,4];
+const STORAGE_KEY = "avicola_data_v1";
 
-<body>
-    <header>
-        <h1>Dashboard de Galpones</h1>
-    </header>
+// --- ESTADO EN MEMORIA ---
+let state = { // estructura: { galponId: [ registros ] }
+  1: [],2: [],3: [],4: []
+};
 
-    <div class="container">
+// --- UTIL ---
+function uid(){return Math.random().toString(36).slice(2,9)}
+function nowISO(){ return new Date().toISOString() }
+function load(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw); }
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); document.getElementById("last-sync").innerText = "Guardado local: " + new Date().toLocaleString(); }
+function formatDate(d){ return (new Date(d)).toLocaleDateString() }
+function formatTime(d){ return (new Date(d)).toLocaleTimeString().split(":").slice(0,2).join(":") }
 
-        <!-- PANEL LATERAL -->
-        <aside class="sidebar">
-            <h2>Galpones</h2>
-            <ul>
-                <li onclick="selectGalpon(1)">Galpón 1</li>
-                <li onclick="selectGalpon(2)">Galpón 2</li>
-                <li onclick="selectGalpon(3)">Galpón 3</li>
-                <li onclick="selectGalpon(4)">Galpón 4</li>
-            </ul>
-        </aside>
+// --- INICIALIZA UI ---
+const galponSelect = document.getElementById("galponSelect");
+GALPONES.forEach(g => {
+  const opt = document.createElement("option"); opt.value = g; opt.textContent = `Galpón ${g}`; galponSelect.appendChild(opt);
+});
 
-        <!-- PANEL PRINCIPAL -->
-        <main class="content">
+// charts
+let chartProduccion=null, chartTemp=null, chartHum=null, chartConv=null, chartDonut=null, chartComp=null;
 
-            <h2 id="titulo-galpon">Galpón 1</h2>
+// crear cards
+function buildCards(){
+  const container = document.getElementById("cards-area"); container.innerHTML = "";
+  GALPONES.forEach(g => {
+    const card = document.createElement("div"); card.className = "card"; card.id = "card-"+g;
+    card.innerHTML = `<h3>Galpón ${g} - Último registro</h3>
+      <p id="card-prod-${g}">—</p>
+      <div style="color:var(--muted);font-size:13px;margin-top:8px" id="card-meta-${g}"></div>`;
+    container.appendChild(card);
+  });
+}
 
-            <!-- CARDS DE DATOS -->
-            <div class="cards">
-                <div class="card">
-                    <h3>Temperatura</h3>
-                    <p id="temp">-- °C</p>
-                </div>
+// render última info por galpón
+function renderCards(){
+  GALPONES.forEach(g=>{
+    const arr = state[g] || [];
+    const last = arr[arr.length-1];
+    const prodEl = document.getElementById("card-prod-"+g);
+    const metaEl = document.getElementById("card-meta-"+g);
+    if(!last){ prodEl.textContent = "Sin datos"; metaEl.textContent=""; }
+    else {
+      prodEl.textContent = `${last.huevos} huevos • ${last.gallinas} gallinas`;
+      metaEl.textContent = `Temp ${last.temp}°C • Hum ${last.hum}% • Mort ${last.mort} • Alim ${last.alim}kg`;
+    }
+  });
+}
 
-                <div class="card">
-                    <h3>Humedad</h3>
-                    <p id="humedad">-- %</p>
-                </div>
+// CARGAR / GUARDAR
+load(); buildCards(); renderCards(); initCharts(); cargarGraficoActual();
 
-                <div class="card">
-                    <h3>Mortandad</h3>
-                    <p id="mortandad">-- aves</p>
-                </div>
+// --- MODAL ---
+const modal = document.getElementById("modal");
+document.getElementById("btn-nuevo").onclick = ()=>{
+  modal.classList.remove("hidden");
+  document.getElementById("modal-title").innerText = "Nuevo registro";
+  // set fecha/hora por defecto
+  document.getElementById("f-fecha").valueAsDate = new Date();
+  document.getElementById("f-hora").value = new Date().toTimeString().slice(0,5);
+}
+document.getElementById("btn-cancel").onclick = ()=> modal.classList.add("hidden");
 
-                <div class="card">
-                    <h3>Consumo (Alimento)</h3>
-                    <p id="consumo">-- kg</p>
-                </div>
-            </div>
+// FORM - GUARDAR REGISTRO
+document.getElementById("form-reg").onsubmit = function(e){
+  e.preventDefault();
+  const galpon = Number(galponSelect.value);
+  const fecha = document.getElementById("f-fecha").value;
+  const hora = document.getElementById("f-hora").value;
+  const ts = new Date(fecha + "T" + hora + ":00").toISOString();
 
-            <!-- GRÁFICO -->
-            <div class="chart-container">
-                <canvas id="chart"></canvas>
-            </div>
+  const rec = {
+    id: uid(),
+    ts,
+    temp: Number(document.getElementById("f-temp").value||0),
+    hum: Number(document.getElementById("f-hum").value||0),
+    nh3: Number(document.getElementById("f-nh3").value||0),
+    alim: Number(document.getElementById("f-alim").value||0),
+    agua: Number(document.getElementById("f-agua").value||0),
+    kwh: Number(document.getElementById("f-kwh").value||0),
+    peso: Number(document.getElementById("f-peso").value||0),
+    huevos: Number(document.getElementById("f-huevos").value||0),
+    gallinas: Number(document.getElementById("f-gallinas").value||0),
+    mort: Number(document.getElementById("f-mort").value||0)
+  };
 
-        </main>
-    </div>
+  state[galpon].push(rec);
+  save();
+  modal.classList.add("hidden");
+  renderCards();
+  cargarGraficoActual();
+  alert("Registro guardado!");
+};
 
-    <script src="script.js"></script>
-</body>
-</html>
-<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Dashboard Avícola - Profesional</title>
+// HISTORIAL
+document.getElementById("btn-historial").onclick = showHist;
+document.getElementById("btn-close-hist").onclick = ()=>{ document.getElementById("hist").classList.add("hidden"); }
 
-<link rel="stylesheet" href="style.css">
+function showHist(){
+  const galpon = Number(galponSelect.value);
+  const list = state[galpon] || [];
+  const tb = document.querySelector("#hist-table tbody"); tb.innerHTML = "";
+  document.getElementById("hist-galpon").innerText = galpon;
+  list.slice().reverse().forEach(r=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${formatDate(r.ts)}</td><td>${formatTime(r.ts)}</td><td>${r.temp}</td><td>${r.hum}</td><td>${r.nh3}</td><td>${r.huevos}</td><td>${r.gallinas}</td><td>${r.mort}</td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById("hist").classList.remove("hidden");
+}
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-  <div id="app">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="brand">🐔 Avícola Pro</div>
+// --- GRAFICOS ---
+function initCharts(){
+  const ctxP = document.getElementById("chartProduccion").getContext("2d");
+  chartProduccion = new Chart(ctxP, { type:'line', data:{ labels:[], datasets:[{label:'Producción', data:[], borderColor:'#00d1ff', backgroundColor:'rgba(0,209,255,0.06)', tension:0.3 }] }, options:{responsive:true,scales:{y:{beginAtZero:true}}} });
 
-      <div class="user-block">
-        <div class="user-name">Usuario: <b>admin</b></div>
-        <button id="btn-logout" class="btn small">Cerrar sesión</button>
-      </div>
+  const ctxT = document.getElementById("chartTemp").getContext("2d");
+  chartTemp = new Chart(ctxT, { type:'line', data:{ labels:[], datasets:[{label:'Temperatura', data:[], borderColor:'#ff7a59', backgroundColor:'rgba(255,122,89,0.06)', tension:0.3 }] }, options:{responsive:true,scales:{y:{beginAtZero:false}}} });
 
-      <hr>
+  const ctxH = document.getElementById("chartHum").getContext("2d");
+  chartHum = new Chart(ctxH, { type:'line', data:{ labels:[], datasets:[{label:'Humedad', data:[], borderColor:'#9bfe7a', backgroundColor:'rgba(155,254,122,0.06)', tension:0.3 }] }, options:{responsive:true,scales:{y:{beginAtZero:true}}} });
 
-      <div class="menu">
-        <label for="galponSelect">Seleccionar galpón</label>
-        <select id="galponSelect"></select>
+  const ctxC = document.getElementById("chartConv").getContext("2d");
+  chartConv = new Chart(ctxC, { type:'bar', data:{ labels:[], datasets:[{label:'Alimento (kg)', data:[], backgroundColor:'#7c4dff'},{label:'Huevos', data:[], backgroundColor:'#00d1ff'}] }, options:{responsive:true,scales:{y:{beginAtZero:true}}} });
 
-        <button id="btn-nuevo" class="btn">Nuevo registro</button>
-        <button id="btn-historial" class="btn">Ver historial</button>
+  const ctxD = document.getElementById("chartDonut").getContext("2d");
+  chartDonut = new Chart(ctxD, { type:'doughnut', data:{ labels:['Mortandad','Vivas'], datasets:[{data:[0,1], backgroundColor:['#ef4444','#10b981']}] }, options:{responsive:true} });
 
-        <hr>
-        <div class="legend">
-          <div><span class="dot green"></span>OK</div>
-          <div><span class="dot yellow"></span>Atención</div>
-          <div><span class="dot red"></span>Crítico</div>
-        </div>
-      </div>
-    </aside>
+  const ctxComp = document.getElementById("chartComp").getContext("2d");
+  chartComp = new Chart(ctxComp, { type:'bar', data:{ labels: GALPONES.map(g=>'G'+g), datasets:[{label:'Producción (último)', data:[], backgroundColor:['#2563eb','#7c3aed','#06b6d4','#f59e0b']}] }, options:{responsive:true,scales:{y:{beginAtZero:true}}} });
+}
 
-    <!-- MAIN -->
-    <main class="main">
-      <!-- TOP -->
-      <header class="top">
-        <h1>Dashboard Avícola — Galpones</h1>
-        <div class="top-right">
-          <div id="last-sync">Datos guardados localmente</div>
-        </div>
-      </header>
+function cargarGraficoActual(){
+  const galpon = Number(galponSelect.value);
+  const arr = (state[galpon] || []).slice(-7); // últimos 7 registros
+  const labels = arr.map(r=> formatDate(r.ts) + ' ' + formatTime(r.ts));
+  const prod = arr.map(r=> r.huevos);
+  const temp = arr.map(r=> r.temp);
+  const hum = arr.map(r=> r.hum);
+  const alim = arr.map(r=> r.alim);
+  const gallinas = arr.map(r=> r.gallinas);
+  const mort = arr.map(r=> r.mort);
 
-      <!-- CARDS -->
-      <section class="cards" id="cards-area">
-        <!-- cards dinámicos -->
-      </section>
+  // Producción
+  chartProduccion.data.labels = labels; chartProduccion.data.datasets[0].data = prod; chartProduccion.update();
 
-      <!-- GRÁFICOS -->
-      <section class="graphs">
-        <div class="graph big">
-          <h3>Producción (últimos 7 registros)</h3>
-          <canvas id="chartProduccion"></canvas>
-        </div>
+  // Temp
+  chartTemp.data.labels = labels; chartTemp.data.datasets[0].data = temp; chartTemp.update();
 
-        <div class="graph">
-          <h3>Temperatura (°C)</h3>
-          <canvas id="chartTemp"></canvas>
-        </div>
+  // Hum
+  chartHum.data.labels = labels; chartHum.data.datasets[0].data = hum; chartHum.update();
 
-        <div class="graph">
-          <h3>Humedad (%)</h3>
-          <canvas id="chartHum"></canvas>
-        </div>
+  // Conv comparativo
+  chartConv.data.labels = labels.length?labels:['Sin datos']; chartConv.data.datasets[0].data = alim.length?alim:[0]; chartConv.data.datasets[1].data = prod.length?prod:[0]; chartConv.update();
 
-        <div class="graph">
-          <h3>Consumo de alimento (kg) vs Huevos</h3>
-          <canvas id="chartConv"></canvas>
-        </div>
+  // Donut
+  const last = arr[arr.length-1] || null;
+  if(last){
+    const vivas = Math.max(0, last.gallinas - last.mort);
+    chartDonut.data.datasets[0].data = [last.mort, vivas];
+  } else chartDonut.data.datasets[0].data = [0,1];
+  chartDonut.update();
 
-        <div class="graph small">
-          <h3>Distribución: Mortandad / Vivas</h3>
-          <canvas id="chartDonut"></canvas>
-        </div>
+  // Comparativo producción por galpón (último)
+  const comp = GALPONES.map(g=>{
+    const a = state[g] || []; return a.length? a[a.length-1].huevos : 0;
+  });
+  chartComp.data.datasets[0].data = comp; chartComp.update();
 
-        <div class="graph small">
-          <h3>Comparativo: Producción por Galpón</h3>
-          <canvas id="chartComp"></canvas>
-        </div>
-      </section>
+  // Cards
+  renderCards();
 
-      <!-- MODALES / FORMULARIOS -->
-      <div id="modal" class="modal hidden">
-        <div class="modal-body">
-          <h2 id="modal-title">Nuevo registro</h2>
-          <form id="form-reg">
-            <div class="row">
-              <label>Fecha</label>
-              <input type="date" id="f-fecha" required>
-            </div>
+  // Alertas: indicador en sidebar color (simple)
+  checkAlertsForGalpon(galpon);
+}
 
-            <div class="row">
-              <label>Hora</label>
-              <input type="time" id="f-hora" required>
-            </div>
+// --- ALERTAS Y METRICAS ---
+function checkAlertsForGalpon(g){
+  const arr = state[g] || [];
+  const last = arr[arr.length-1];
+  // limpiar estilos
+  const card = document.getElementById("card-"+g);
+  if(!last){ card.style.borderLeft = '4px solid rgba(255,255,255,0.03)'; return; }
 
-            <div class="row triple">
-              <div><label>Temperatura (°C)</label><input id="f-temp" type="number" step="0.1"></div>
-              <div><label>Humedad (%)</label><input id="f-hum" type="number" step="0.1"></div>
-              <div><label>Amoníaco (ppm)</label><input id="f-nh3" type="number" step="0.1"></div>
-            </div>
+  // calculos
+  const prodPerHen = last.gallinas? last.huevos / last.gallinas : 0;
+  const conversion = last.huevos? (last.alim / last.huevos) : null;
 
-            <div class="row triple">
-              <div><label>Alimento (kg)</label><input id="f-alim" type="number" step="0.01"></div>
-              <div><label>Agua (L)</label><input id="f-agua" type="number" step="0.1"></div>
-              <div><label>Energía (kWh)</label><input id="f-kwh" type="number" step="0.01"></div>
-            </div>
+  // condiciones criticas
+  let status = 'ok';
+  if(last.mort > 10 || last.temp > 34 || last.nh3 > 25) status = 'crit';
+  else if(last.temp > 31 || last.hum > 75 || last.mort > 5) status = 'warn';
 
-            <div class="row triple">
-              <div><label>Peso prom. (g)</label><input id="f-peso" type="number" step="0.1"></div>
-              <div><label>Huevos (unidades)</label><input id="f-huevos" type="number"></div>
-              <div><label>Gallinas vivas</label><input id="f-gallinas" type="number"></div>
-            </div>
+  if(status==='crit') card.style.borderLeft = '4px solid var(--danger)';
+  else if(status==='warn') card.style.borderLeft = '4px solid var(--warn)';
+  else card.style.borderLeft = '4px solid var(--success)';
 
-            <div class="row">
-              <label>Mortandad (aves)</label>
-              <input id="f-mort" type="number">
-            </div>
+  // además, actualizamos la tarjeta de producción con texto detallado
+  const prodEl = document.getElementById("card-prod-"+g);
+  prodEl && (prodEl.textContent = `${last.huevos} huevos • ${last.gallinas} gallinas`);
 
-            <div class="row actions">
-              <button type="submit" class="btn">Guardar</button>
-              <button type="button" id="btn-cancel" class="btn ghost">Cancelar</button>
-            </div>
-          </form>
-        </div>
-      </div>
+  // predicción (media móvil simple de 3)
+  const preds = rollingMean(arr.map(x=>x.huevos),3);
+  const predTxt = preds.length? `Predicción (media móvil 3): ${Math.round(preds[preds.length-1])} huevos` : '';
+  // añadimos contenido meta
+  const metaEl = document.getElementById("card-meta-"+g);
+  metaEl && (metaEl.textContent = `Temp ${last.temp}°C • Hum ${last.hum}% • Mort ${last.mort} • Conv ${conversion? conversion.toFixed(2) : '-'} • ${predTxt}`);
+}
 
-      <!-- HISTORIAL -->
-      <div id="hist" class="hidden history">
-        <h3>Historial - Galpón <span id="hist-galpon"></span></h3>
-        <table id="hist-table">
-          <thead><tr>
-            <th>Fecha</th><th>Hora</th><th>Temp</th><th>Hum</th><th>NH3</th><th>Huevos</th><th>Gallinas</th><th>Mort</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-        <button id="btn-close-hist" class="btn">Cerrar</button>
-      </div>
+// --- UTILIDADES MATEMATICAS ---
+function rollingMean(arr,n){
+  if(!arr.length) return [];
+  const out=[];
+  for(let i=0;i<arr.length;i++){
+    const slice = arr.slice(Math.max(0,i-n+1),i+1);
+    out.push( slice.reduce((a,b)=>a+b,0)/slice.length );
+  }
+  return out;
+}
 
-    </main>
-  </div>
+// eventos
+galponSelect.onchange = cargarGraficoActual;
+document.getElementById("btn-logout").onclick = ()=>{ if(confirm("Cerrar sesión?")) location.reload(); }
 
-<script src="script.js"></script>
-</body>
-</html>
+// Carga inicial de demo (si no hay datos, cargamos ejemplos)
+function seedDemo(){
+  let any=false; for(let g of GALPONES) if((state[g]||[]).length>0) any=true;
+  if(any) return;
+  const base = new Date();
+  GALPONES.forEach((g, idx)=>{
+    for(let i=6;i>=0;i--){
+      const d = new Date(base); d.setDate(base.getDate()-i);
+      state[g].push({
+        id: uid(), ts: d.toISOString(),
+        temp: 26 + idx + Math.round(Math.random()*2),
+        hum: 55 + idx*2 + Math.round(Math.random()*5),
+        nh3: Math.round(Math.random()*10),
+        alim: 120 + idx*5 + Math.round(Math.random()*10),
+        agua: 800 + idx*20 + Math.round(Math.random()*50),
+        kwh: 15 + idx,
+        peso: 1700 + idx*10,
+        huevos: 1000 - idx*30 + Math.round(Math.random()*80),
+        gallinas: 1200,
+        mort: Math.round(Math.random()*3)
+      });
+    }
+  });
+  save();
+}
+
+seedDemo();
+cargarGraficoActual();
+
+// Forzar guardado periódico
+setInterval(save, 1000*30);
