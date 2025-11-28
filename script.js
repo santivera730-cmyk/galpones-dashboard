@@ -1,313 +1,101 @@
-const galpones = {
-    1: { temp: 26, humedad: 55, mortandad: 2, consumo: 120 },
-    2: { temp: 24, humedad: 60, mortandad: 1, consumo: 130 },
-    3: { temp: 25, humedad: 52, mortandad: 3, consumo: 140 },
-    4: { temp: 27, humedad: 58, mortandad: 0, consumo: 150 }
+// DATOS SIMULADOS POR GALPÓN
+const datosGalpones = {
+    1: {
+        produccion: [300, 340, 320, 360, 380, 420, 410],
+        postura: 83,
+        recomendaciones: ["Revisar proteína del alimento", "Mejorar ventilación"],
+        proyeccion: [280, 300, 320, 340, 360],
+        temperatura: [22, 24, 23, 25, 26, 27],
+        humedad: [55, 58, 60, 65, 62],
+        mortalidad: [1, 0, 2, 1, 0],
+        alimento: [120, 122, 130, 128, 135]
+    },
+    2: {
+        produccion: [280, 300, 310, 330, 340, 350, 360],
+        postura: 79,
+        recomendaciones: ["Revisar limpieza", "Ajustar densidad"],
+        proyeccion: [260, 280, 300, 310, 330],
+        temperatura: [23, 26, 27, 28, 29],
+        humedad: [50, 52, 54, 58, 60],
+        mortalidad: [2, 1, 1, 2, 1],
+        alimento: [110, 115, 118, 120, 122]
+    },
+    3: {
+        produccion: [310, 330, 340, 350, 370, 390, 410],
+        postura: 88,
+        recomendaciones: ["Controlar agua", "Verificar nidos"],
+        proyeccion: [300, 320, 340, 360, 380],
+        temperatura: [21, 22, 23, 24, 25],
+        humedad: [60, 62, 64, 66, 68],
+        mortalidad: [0, 1, 0, 1, 1],
+        alimento: [130, 132, 134, 140, 145]
+    },
+    4: {
+        produccion: [260, 280, 300, 320, 330, 340, 350],
+        postura: 75,
+        recomendaciones: ["Ajustar iluminación"],
+        proyeccion: [240, 260, 280, 300, 320],
+        temperatura: [25, 27, 28, 29, 30],
+        humedad: [52, 55, 56, 58, 60],
+        mortalidad: [3, 2, 1, 2, 3],
+        alimento: [100, 105, 110, 115, 118]
+    }
 };
 
-let chart = null;
+// CANVAS REFERENCIAS
+let ctxProd = document.getElementById("produccionDiaria").getContext("2d");
+let ctxPostura = document.getElementById("graficoPostura").getContext("2d");
+let ctxProj = document.getElementById("proyeccion").getContext("2d");
+let ctxTemp = document.getElementById("temperaturaGrafico").getContext("2d");
+let ctxHum = document.getElementById("humedadGrafico").getContext("2d");
+let ctxMort = document.getElementById("mortalidadGrafico").getContext("2d");
+let ctxAlim = document.getElementById("alimentoGrafico").getContext("2d");
 
-function selectGalpon(num) {
-    document.getElementById("titulo-galpon").innerText = `Galpón ${num}`;
-    document.getElementById("temp").innerText = galpones[num].temp + " °C";
-    document.getElementById("humedad").innerText = galpones[num].humedad + " %";
-    document.getElementById("mortandad").innerText = galpones[num].mortandad + " aves";
-    document.getElementById("consumo").innerText = galpones[num].consumo + " kg";
+// GRÁFICOS (INICIALIZACIÓN)
+let charts = {};
 
-    updateChart(num);
-}
+function crearGrafico(nombre, ctx, label, datos) {
+    if (charts[nombre]) charts[nombre].destroy();
 
-function updateChart(num) {
-    const ctx = document.getElementById("chart").getContext("2d");
-
-    if (chart) chart.destroy();
-
-    chart = new Chart(ctx, {
+    charts[nombre] = new Chart(ctx, {
         type: "line",
         data: {
-            labels: ["Día 1", "Día 2", "Día 3", "Día 4", "Día 5"],
-            datasets: [
-                {
-                    label: "Temperatura",
-                    data: [
-                        galpones[num].temp - 2,
-                        galpones[num].temp,
-                        galpones[num].temp + 1,
-                        galpones[num].temp - 1,
-                        galpones[num].temp
-                    ],
-                    borderColor: "red",
-                    borderWidth: 2
-                }
-            ]
+            labels: ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"],
+            datasets: [{
+                label: label,
+                data: datos,
+                borderWidth: 2,
+                borderColor: "#4a8bff",
+                backgroundColor: "rgba(74,139,255,0.2)"
+            }]
         }
     });
 }
 
-selectGalpon(1);
-/* Dashboard Avícola - Script
-   - Guarda datos en LocalStorage
-   - Maneja 4 galpones
-   - Genera múltiples gráficos con Chart.js
-   - Calcula indicadores y alertas
-*/
+function actualizarDashboard(id) {
+    let d = datosGalpones[id];
 
-// --- CONFIG ---
-const GALPONES = [1,2,3,4];
-const STORAGE_KEY = "avicola_data_v1";
+    crearGrafico("produccion", ctxProd, "Huevos", d.produccion);
+    crearGrafico("postura", ctxPostura, "Postura", [d.postura]);
+    crearGrafico("proyeccion", ctxProj, "Proyección", d.proyeccion);
+    crearGrafico("temperatura", ctxTemp, "Temperatura °C", d.temperatura);
+    crearGrafico("humedad", ctxHum, "Humedad %", d.humedad);
+    crearGrafico("mortalidad", ctxMort, "Muertes", d.mortalidad);
+    crearGrafico("alimento", ctxAlim, "kg comida", d.alimento);
 
-// --- ESTADO EN MEMORIA ---
-let state = { // estructura: { galponId: [ registros ] }
-  1: [],2: [],3: [],4: []
-};
+    document.getElementById("posturaNumero").innerText = d.postura + "%";
 
-// --- UTIL ---
-function uid(){return Math.random().toString(36).slice(2,9)}
-function nowISO(){ return new Date().toISOString() }
-function load(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw); }
-function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); document.getElementById("last-sync").innerText = "Guardado local: " + new Date().toLocaleString(); }
-function formatDate(d){ return (new Date(d)).toLocaleDateString() }
-function formatTime(d){ return (new Date(d)).toLocaleTimeString().split(":").slice(0,2).join(":") }
+    let rec = document.getElementById("listaRecomendaciones");
+    rec.innerHTML = "";
+    d.recomendaciones.forEach(r => {
+        rec.innerHTML += `<li>⚠ ${r}</li>`;
+    });
+}
 
-// --- INICIALIZA UI ---
-const galponSelect = document.getElementById("galponSelect");
-GALPONES.forEach(g => {
-  const opt = document.createElement("option"); opt.value = g; opt.textContent = `Galpón ${g}`; galponSelect.appendChild(opt);
+// CAMBIO DE GALPÓN
+document.getElementById("selector-galpon").addEventListener("change", (e) => {
+    actualizarDashboard(e.target.value);
 });
 
-// charts
-let chartProduccion=null, chartTemp=null, chartHum=null, chartConv=null, chartDonut=null, chartComp=null;
-
-// crear cards
-function buildCards(){
-  const container = document.getElementById("cards-area"); container.innerHTML = "";
-  GALPONES.forEach(g => {
-    const card = document.createElement("div"); card.className = "card"; card.id = "card-"+g;
-    card.innerHTML = `<h3>Galpón ${g} - Último registro</h3>
-      <p id="card-prod-${g}">—</p>
-      <div style="color:var(--muted);font-size:13px;margin-top:8px" id="card-meta-${g}"></div>`;
-    container.appendChild(card);
-  });
-}
-
-// render última info por galpón
-function renderCards(){
-  GALPONES.forEach(g=>{
-    const arr = state[g] || [];
-    const last = arr[arr.length-1];
-    const prodEl = document.getElementById("card-prod-"+g);
-    const metaEl = document.getElementById("card-meta-"+g);
-    if(!last){ prodEl.textContent = "Sin datos"; metaEl.textContent=""; }
-    else {
-      prodEl.textContent = `${last.huevos} huevos • ${last.gallinas} gallinas`;
-      metaEl.textContent = `Temp ${last.temp}°C • Hum ${last.hum}% • Mort ${last.mort} • Alim ${last.alim}kg`;
-    }
-  });
-}
-
-// CARGAR / GUARDAR
-load(); buildCards(); renderCards(); initCharts(); cargarGraficoActual();
-
-// --- MODAL ---
-const modal = document.getElementById("modal");
-document.getElementById("btn-nuevo").onclick = ()=>{
-  modal.classList.remove("hidden");
-  document.getElementById("modal-title").innerText = "Nuevo registro";
-  // set fecha/hora por defecto
-  document.getElementById("f-fecha").valueAsDate = new Date();
-  document.getElementById("f-hora").value = new Date().toTimeString().slice(0,5);
-}
-document.getElementById("btn-cancel").onclick = ()=> modal.classList.add("hidden");
-
-// FORM - GUARDAR REGISTRO
-document.getElementById("form-reg").onsubmit = function(e){
-  e.preventDefault();
-  const galpon = Number(galponSelect.value);
-  const fecha = document.getElementById("f-fecha").value;
-  const hora = document.getElementById("f-hora").value;
-  const ts = new Date(fecha + "T" + hora + ":00").toISOString();
-
-  const rec = {
-    id: uid(),
-    ts,
-    temp: Number(document.getElementById("f-temp").value||0),
-    hum: Number(document.getElementById("f-hum").value||0),
-    nh3: Number(document.getElementById("f-nh3").value||0),
-    alim: Number(document.getElementById("f-alim").value||0),
-    agua: Number(document.getElementById("f-agua").value||0),
-    kwh: Number(document.getElementById("f-kwh").value||0),
-    peso: Number(document.getElementById("f-peso").value||0),
-    huevos: Number(document.getElementById("f-huevos").value||0),
-    gallinas: Number(document.getElementById("f-gallinas").value||0),
-    mort: Number(document.getElementById("f-mort").value||0)
-  };
-
-  state[galpon].push(rec);
-  save();
-  modal.classList.add("hidden");
-  renderCards();
-  cargarGraficoActual();
-  alert("Registro guardado!");
-};
-
-// HISTORIAL
-document.getElementById("btn-historial").onclick = showHist;
-document.getElementById("btn-close-hist").onclick = ()=>{ document.getElementById("hist").classList.add("hidden"); }
-
-function showHist(){
-  const galpon = Number(galponSelect.value);
-  const list = state[galpon] || [];
-  const tb = document.querySelector("#hist-table tbody"); tb.innerHTML = "";
-  document.getElementById("hist-galpon").innerText = galpon;
-  list.slice().reverse().forEach(r=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${formatDate(r.ts)}</td><td>${formatTime(r.ts)}</td><td>${r.temp}</td><td>${r.hum}</td><td>${r.nh3}</td><td>${r.huevos}</td><td>${r.gallinas}</td><td>${r.mort}</td>`;
-    tb.appendChild(tr);
-  });
-  document.getElementById("hist").classList.remove("hidden");
-}
-
-// --- GRAFICOS ---
-function initCharts(){
-  const ctxP = document.getElementById("chartProduccion").getContext("2d");
-  chartProduccion = new Chart(ctxP, { type:'line', data:{ labels:[], datasets:[{label:'Producción', data:[], borderColor:'#00d1ff', backgroundColor:'rgba(0,209,255,0.06)', tension:0.3 }] }, options:{responsive:true,scales:{y:{beginAtZero:true}}} });
-
-  const ctxT = document.getElementById("chartTemp").getContext("2d");
-  chartTemp = new Chart(ctxT, { type:'line', data:{ labels:[], datasets:[{label:'Temperatura', data:[], borderColor:'#ff7a59', backgroundColor:'rgba(255,122,89,0.06)', tension:0.3 }] }, options:{responsive:true,scales:{y:{beginAtZero:false}}} });
-
-  const ctxH = document.getElementById("chartHum").getContext("2d");
-  chartHum = new Chart(ctxH, { type:'line', data:{ labels:[], datasets:[{label:'Humedad', data:[], borderColor:'#9bfe7a', backgroundColor:'rgba(155,254,122,0.06)', tension:0.3 }] }, options:{responsive:true,scales:{y:{beginAtZero:true}}} });
-
-  const ctxC = document.getElementById("chartConv").getContext("2d");
-  chartConv = new Chart(ctxC, { type:'bar', data:{ labels:[], datasets:[{label:'Alimento (kg)', data:[], backgroundColor:'#7c4dff'},{label:'Huevos', data:[], backgroundColor:'#00d1ff'}] }, options:{responsive:true,scales:{y:{beginAtZero:true}}} });
-
-  const ctxD = document.getElementById("chartDonut").getContext("2d");
-  chartDonut = new Chart(ctxD, { type:'doughnut', data:{ labels:['Mortandad','Vivas'], datasets:[{data:[0,1], backgroundColor:['#ef4444','#10b981']}] }, options:{responsive:true} });
-
-  const ctxComp = document.getElementById("chartComp").getContext("2d");
-  chartComp = new Chart(ctxComp, { type:'bar', data:{ labels: GALPONES.map(g=>'G'+g), datasets:[{label:'Producción (último)', data:[], backgroundColor:['#2563eb','#7c3aed','#06b6d4','#f59e0b']}] }, options:{responsive:true,scales:{y:{beginAtZero:true}}} });
-}
-
-function cargarGraficoActual(){
-  const galpon = Number(galponSelect.value);
-  const arr = (state[galpon] || []).slice(-7); // últimos 7 registros
-  const labels = arr.map(r=> formatDate(r.ts) + ' ' + formatTime(r.ts));
-  const prod = arr.map(r=> r.huevos);
-  const temp = arr.map(r=> r.temp);
-  const hum = arr.map(r=> r.hum);
-  const alim = arr.map(r=> r.alim);
-  const gallinas = arr.map(r=> r.gallinas);
-  const mort = arr.map(r=> r.mort);
-
-  // Producción
-  chartProduccion.data.labels = labels; chartProduccion.data.datasets[0].data = prod; chartProduccion.update();
-
-  // Temp
-  chartTemp.data.labels = labels; chartTemp.data.datasets[0].data = temp; chartTemp.update();
-
-  // Hum
-  chartHum.data.labels = labels; chartHum.data.datasets[0].data = hum; chartHum.update();
-
-  // Conv comparativo
-  chartConv.data.labels = labels.length?labels:['Sin datos']; chartConv.data.datasets[0].data = alim.length?alim:[0]; chartConv.data.datasets[1].data = prod.length?prod:[0]; chartConv.update();
-
-  // Donut
-  const last = arr[arr.length-1] || null;
-  if(last){
-    const vivas = Math.max(0, last.gallinas - last.mort);
-    chartDonut.data.datasets[0].data = [last.mort, vivas];
-  } else chartDonut.data.datasets[0].data = [0,1];
-  chartDonut.update();
-
-  // Comparativo producción por galpón (último)
-  const comp = GALPONES.map(g=>{
-    const a = state[g] || []; return a.length? a[a.length-1].huevos : 0;
-  });
-  chartComp.data.datasets[0].data = comp; chartComp.update();
-
-  // Cards
-  renderCards();
-
-  // Alertas: indicador en sidebar color (simple)
-  checkAlertsForGalpon(galpon);
-}
-
-// --- ALERTAS Y METRICAS ---
-function checkAlertsForGalpon(g){
-  const arr = state[g] || [];
-  const last = arr[arr.length-1];
-  // limpiar estilos
-  const card = document.getElementById("card-"+g);
-  if(!last){ card.style.borderLeft = '4px solid rgba(255,255,255,0.03)'; return; }
-
-  // calculos
-  const prodPerHen = last.gallinas? last.huevos / last.gallinas : 0;
-  const conversion = last.huevos? (last.alim / last.huevos) : null;
-
-  // condiciones criticas
-  let status = 'ok';
-  if(last.mort > 10 || last.temp > 34 || last.nh3 > 25) status = 'crit';
-  else if(last.temp > 31 || last.hum > 75 || last.mort > 5) status = 'warn';
-
-  if(status==='crit') card.style.borderLeft = '4px solid var(--danger)';
-  else if(status==='warn') card.style.borderLeft = '4px solid var(--warn)';
-  else card.style.borderLeft = '4px solid var(--success)';
-
-  // además, actualizamos la tarjeta de producción con texto detallado
-  const prodEl = document.getElementById("card-prod-"+g);
-  prodEl && (prodEl.textContent = `${last.huevos} huevos • ${last.gallinas} gallinas`);
-
-  // predicción (media móvil simple de 3)
-  const preds = rollingMean(arr.map(x=>x.huevos),3);
-  const predTxt = preds.length? `Predicción (media móvil 3): ${Math.round(preds[preds.length-1])} huevos` : '';
-  // añadimos contenido meta
-  const metaEl = document.getElementById("card-meta-"+g);
-  metaEl && (metaEl.textContent = `Temp ${last.temp}°C • Hum ${last.hum}% • Mort ${last.mort} • Conv ${conversion? conversion.toFixed(2) : '-'} • ${predTxt}`);
-}
-
-// --- UTILIDADES MATEMATICAS ---
-function rollingMean(arr,n){
-  if(!arr.length) return [];
-  const out=[];
-  for(let i=0;i<arr.length;i++){
-    const slice = arr.slice(Math.max(0,i-n+1),i+1);
-    out.push( slice.reduce((a,b)=>a+b,0)/slice.length );
-  }
-  return out;
-}
-
-// eventos
-galponSelect.onchange = cargarGraficoActual;
-document.getElementById("btn-logout").onclick = ()=>{ if(confirm("Cerrar sesión?")) location.reload(); }
-
-// Carga inicial de demo (si no hay datos, cargamos ejemplos)
-function seedDemo(){
-  let any=false; for(let g of GALPONES) if((state[g]||[]).length>0) any=true;
-  if(any) return;
-  const base = new Date();
-  GALPONES.forEach((g, idx)=>{
-    for(let i=6;i>=0;i--){
-      const d = new Date(base); d.setDate(base.getDate()-i);
-      state[g].push({
-        id: uid(), ts: d.toISOString(),
-        temp: 26 + idx + Math.round(Math.random()*2),
-        hum: 55 + idx*2 + Math.round(Math.random()*5),
-        nh3: Math.round(Math.random()*10),
-        alim: 120 + idx*5 + Math.round(Math.random()*10),
-        agua: 800 + idx*20 + Math.round(Math.random()*50),
-        kwh: 15 + idx,
-        peso: 1700 + idx*10,
-        huevos: 1000 - idx*30 + Math.round(Math.random()*80),
-        gallinas: 1200,
-        mort: Math.round(Math.random()*3)
-      });
-    }
-  });
-  save();
-}
-
-seedDemo();
-cargarGraficoActual();
-
-// Forzar guardado periódico
-setInterval(save, 1000*30);
+// CARGA INICIAL
+actualizarDashboard(1);
