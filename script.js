@@ -1,7 +1,20 @@
-//---------------------------------------------------------
-//  DATOS SIMULADOS (SE PUEDEN REEMPLAZAR CON JSON REAL)
-//---------------------------------------------------------
-let datosGalpones = {
+// -------------------------------------
+// CONFIG PARA DATOS REALES DESDE INTERNET
+// -------------------------------------
+
+const URL_API = "https://tu-servidor.com/datos-galpon"; 
+// Debe devolver un JSON así:
+// { produccion: [...], postura: 82, recomendaciones: [...], ... }
+
+// Si no tenés servidor todavía, usa los datos locales:
+let usarDatosDePrueba = true;
+
+
+
+// -------------------------------------
+// DATOS PREDETERMINADOS (SIMULADOS)
+// -------------------------------------
+const datosLocales = {
     1: {
         produccion: [300, 340, 320, 360, 380, 420, 410],
         postura: 83,
@@ -45,14 +58,14 @@ let datosGalpones = {
 };
 
 
-//---------------------------------------------------------
-//  CHARTS
-//---------------------------------------------------------
+
+// -------------------------------------
+// GESTIÓN DE GRÁFICOS
+// -------------------------------------
+
 let charts = {};
 
-function crearGrafico(nombre, id, label, datos) {
-    const ctx = document.getElementById(id).getContext("2d");
-
+function crearGrafico(nombre, ctx, label, datos) {
     if (charts[nombre]) charts[nombre].destroy();
 
     charts[nombre] = new Chart(ctx, {
@@ -64,46 +77,64 @@ function crearGrafico(nombre, id, label, datos) {
                 data: datos,
                 borderWidth: 2,
                 borderColor: "#4a8bff",
-                backgroundColor: "rgba(74,139,255,0.25)"
+                backgroundColor: "rgba(74,139,255,0.2)"
             }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
         }
     });
 }
 
-function actualizarDashboard(id) {
-    const d = datosGalpones[id];
 
-    crearGrafico("prod", "produccionDiaria", "Huevos por día", d.produccion);
-    crearGrafico("post", "graficoPostura", "Postura", [d.postura]);
-    crearGrafico("proj", "proyeccion", "Proyección", d.proyeccion);
-    crearGrafico("temp", "temperaturaGrafico", "Temperatura °C", d.temperatura);
-    crearGrafico("hum", "humedadGrafico", "Humedad %", d.humedad);
-    crearGrafico("mort", "mortalidadGrafico", "Mortalidad", d.mortalidad);
-    crearGrafico("alim", "alimentoGrafico", "Alimento (kg)", d.alimento);
 
-    document.getElementById("posturaNumero").innerText = d.postura + "%";
-
-    let rec = document.getElementById("listaRecomendaciones");
-    rec.innerHTML = "";
-    d.recomendaciones.forEach(r => rec.innerHTML += `<li>⚠ ${r}</li>`);
+// -------------------------------------
+// ACTUALIZAR DASHBOARD
+// -------------------------------------
+async function cargarDatosReales(id) {
+    try {
+        let resp = await fetch(`${URL_API}?galpon=${id}`);
+        let data = await resp.json();
+        usarDatosDePrueba = false;
+        return data;
+    } catch {
+        console.warn("No se pudo conectar al servidor. Usando datos locales.");
+        usarDatosDePrueba = true;
+        return datosLocales[id];
+    }
 }
 
-// Cambiar galpón
-document.getElementById("selector-galpon").addEventListener("change", e => {
-    actualizarDashboard(e.target.value);
-});
 
-// Sidebar
-document.querySelectorAll(".sidebar button").forEach(btn => {
+async function actualizarDashboard(id) {
+    let d = usarDatosDePrueba ? datosLocales[id] : await cargarDatosReales(id);
+
+    crearGrafico("produccion", produccionDiaria.getContext("2d"), "Huevos", d.produccion);
+    crearGrafico("postura", graficoPostura.getContext("2d"), "Postura", [d.postura]);
+    crearGrafico("proyeccion", proyeccion.getContext("2d"), "Proyección", d.proyeccion);
+    crearGrafico("temperatura", temperaturaGrafico.getContext("2d"), "°C", d.temperatura);
+    crearGrafico("humedad", humedadGrafico.getContext("2d"), "% Humedad", d.humedad);
+    crearGrafico("mortalidad", mortalidadGrafico.getContext("2d"), "Muertes", d.mortalidad);
+    crearGrafico("alimento", alimentoGrafico.getContext("2d"), "kg alimento", d.alimento);
+
+    posturaNumero.innerText = d.postura + "%";
+
+    listaRecomendaciones.innerHTML = "";
+    d.recomendaciones.forEach(r => {
+        listaRecomendaciones.innerHTML += `<li>⚠ ${r}</li>`;
+    });
+}
+
+
+
+// -------------------------------------
+// EVENTOS
+// -------------------------------------
+document.querySelectorAll(".btn-galpon").forEach(btn => {
     btn.addEventListener("click", () => {
-        document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
-        document.getElementById(btn.dataset.section).style.display = "block";
+        let id = btn.dataset.id;
+        actualizarDashboard(id);
     });
 });
 
-// Inicializar
+
+// -------------------------------------
+// INICIO
+// -------------------------------------
 actualizarDashboard(1);
