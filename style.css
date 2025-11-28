@@ -1,79 +1,82 @@
-body {
+* {
     margin: 0;
+    padding: 0;
+    box-sizing: border-box;
     font-family: Arial, sans-serif;
-    background: #f4f6f9;
-    display: flex;
 }
 
+body {
+    display: flex;
+    background: #f3f3f3;
+}
+
+/* SIDEBAR */
 .sidebar {
-    width: 240px;
-    background: #ffffff;
+    width: 260px;
+    background: #1e1e2e;
+    color: white;
     height: 100vh;
     padding: 20px;
-    border-right: 1px solid #ddd;
     position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 9999;
 }
 
 .sidebar h2 {
+    font-size: 22px;
     margin-bottom: 20px;
 }
 
-.sidebar nav a {
-    display: block;
+.sidebar button,
+.sidebar select {
+    width: 100%;
     padding: 12px;
-    margin-bottom: 6px;
-    text-decoration: none;
-    color: #333;
-    border-radius: 8px;
-}
-
-.sidebar nav a.active,
-.sidebar nav a:hover {
-    background: #4a8bff;
+    margin: 6px 0;
+    background: #2f2f44;
+    border: none;
     color: white;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
-.content {
+.sidebar button:hover {
+    background: #4a4a6a;
+}
+
+/* CONTENIDO */
+main {
     margin-left: 260px;
     padding: 25px;
     width: calc(100% - 260px);
 }
 
-header {
+h1 {
+    margin-bottom: 20px;
+}
+
+.tarjetas {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-header h1 {
-    margin: 0;
-}
-
-select {
-    padding: 8px;
-    font-size: 16px;
-}
-
-.dashboard {
-    margin-top: 25px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    flex-wrap: wrap;
+    gap: 25px;
 }
 
 .card {
     background: white;
-    padding: 15px;
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    flex: 1;
+    min-width: 300px;
 }
 
-.large {
-    grid-column: span 2;
-}
-
-.numero {
-    font-size: 42px;
+.numeroGrande {
+    font-size: 48px;
     font-weight: bold;
-    margin: 10px 0;
+    text-align: center;
+}
+
+canvas {
+    width: 100% !important;
+    height: 250px !important;
 }
