@@ -1,5 +1,5 @@
 //---------------------------------------------------------
-//  DATOS CARGADOS LOCALMENTE (DEFAULT SI NO HAY SERVIDOR)
+//  DATOS SIMULADOS (SE PUEDEN REEMPLAZAR CON JSON REAL)
 //---------------------------------------------------------
 let datosGalpones = {
     1: {
@@ -46,21 +46,12 @@ let datosGalpones = {
 
 
 //---------------------------------------------------------
-//  SEGURO PARA QUE EL SIDEBAR SIEMPRE QUEDE CLICKEABLE
-//---------------------------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-    const sidebar = document.querySelector(".sidebar");
-    if (sidebar) sidebar.style.zIndex = "9999";
-});
-
-
-//---------------------------------------------------------
-//  CANVAS Y CHARTS
+//  CHARTS
 //---------------------------------------------------------
 let charts = {};
 
-function crearGrafico(nombre, ctxId, label, datos) {
-    const ctx = document.getElementById(ctxId).getContext("2d");
+function crearGrafico(nombre, id, label, datos) {
+    const ctx = document.getElementById(id).getContext("2d");
 
     if (charts[nombre]) charts[nombre].destroy();
 
@@ -83,80 +74,36 @@ function crearGrafico(nombre, ctxId, label, datos) {
     });
 }
 
-
-//---------------------------------------------------------
-//  ACTUALIZACIÓN TOTAL DEL DASHBOARD
-//---------------------------------------------------------
 function actualizarDashboard(id) {
     const d = datosGalpones[id];
 
-    // Gráficos
     crearGrafico("prod", "produccionDiaria", "Huevos por día", d.produccion);
-    crearGrafico("post", "graficoPostura", "Postura (%)", [d.postura]);
-    crearGrafico("proj", "proyeccion", "Proyección semanal", d.proyeccion);
+    crearGrafico("post", "graficoPostura", "Postura", [d.postura]);
+    crearGrafico("proj", "proyeccion", "Proyección", d.proyeccion);
     crearGrafico("temp", "temperaturaGrafico", "Temperatura °C", d.temperatura);
     crearGrafico("hum", "humedadGrafico", "Humedad %", d.humedad);
     crearGrafico("mort", "mortalidadGrafico", "Mortalidad", d.mortalidad);
     crearGrafico("alim", "alimentoGrafico", "Alimento (kg)", d.alimento);
 
-    // Texto
     document.getElementById("posturaNumero").innerText = d.postura + "%";
 
-    // Recomendaciones
-    const rec = document.getElementById("listaRecomendaciones");
+    let rec = document.getElementById("listaRecomendaciones");
     rec.innerHTML = "";
-    d.recomendaciones.forEach(r => {
-        rec.innerHTML += `<li>⚠ ${r}</li>`;
-    });
+    d.recomendaciones.forEach(r => rec.innerHTML += `<li>⚠ ${r}</li>`);
 }
 
-
-//---------------------------------------------------------
-//  SELECTOR DE GALPÓN
-//---------------------------------------------------------
+// Cambiar galpón
 document.getElementById("selector-galpon").addEventListener("change", e => {
     actualizarDashboard(e.target.value);
 });
 
-
-//---------------------------------------------------------
-//  SIDEBAR: hacer clic en botones y cambiar secciones
-//---------------------------------------------------------
+// Sidebar
 document.querySelectorAll(".sidebar button").forEach(btn => {
     btn.addEventListener("click", () => {
-        const target = btn.dataset.section;
-
-        document.querySelectorAll(".section").forEach(sec => {
-            sec.style.display = "none";
-        });
-
-        document.getElementById(target).style.display = "block";
+        document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
+        document.getElementById(btn.dataset.section).style.display = "block";
     });
 });
 
-
-//---------------------------------------------------------
-//  FUNCIÓN PARA CARGAR DATOS REALES DESDE INTERNET
-//---------------------------------------------------------
-async function cargarDatosDesdeWeb(url) {
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-
-        // El JSON debe tener el MISMO FORMATO que datosGalpones
-        datosGalpones = data;
-
-        // Recargar panel actual
-        actualizarDashboard(1);
-
-        console.log("Datos reales cargados correctamente.");
-    } catch (error) {
-        console.error("Error al cargar datos desde web:", error);
-    }
-}
-
-
-//---------------------------------------------------------
-//  INICIALIZACIÓN
-//---------------------------------------------------------
+// Inicializar
 actualizarDashboard(1);
